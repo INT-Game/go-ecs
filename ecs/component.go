@@ -1,4 +1,4 @@
-package ecs2
+package ecs
 
 import (
 	"mmo-server/sparse_set"

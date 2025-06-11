@@ -1,4 +1,4 @@
-package ecs2
+package ecs
 
 type ISystem interface {
 	StartUp()

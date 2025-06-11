@@ -1,4 +1,4 @@
-package ecs2
+package ecs
 
 type IEventData[T any] interface {
 	Has() bool
