@@ -1,7 +1,7 @@
 package ecs
 
 import (
-	"mmo-server/array"
+	"github.com/INT-Game/go-ecs/array"
 	"reflect"
 )
 

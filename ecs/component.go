@@ -1,8 +1,6 @@
 package ecs
 
-import (
-	"mmo-server/sparse_set"
-)
+import "github.com/INT-Game/go-ecs/sparse_set"
 
 type ComponentContainer map[ComponentId]IComponent
 
