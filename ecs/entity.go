@@ -77,3 +77,14 @@ func (e *Entity) RemoveComponents(components ...IComponent) {
 		}
 	}
 }
+
+func GetComponent[T IComponent](e IEntity) T {
+	t := reflect.TypeOf((*T)(nil)).Elem()
+	componentId := CompIdGetter.GetID(t)
+	component, ok := e.GetComponentContainer()[ComponentId(componentId)]
+	if !ok {
+		var zero T
+		return zero
+	}
+	return component.(T)
+}

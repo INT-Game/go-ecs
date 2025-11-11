@@ -29,7 +29,7 @@ func (r *Resources) Get(resource IComponent) (IComponent, bool) {
 	return nil, false
 }
 
-// 添加泛型获取方法，使用更方便
+// GetResource 添加泛型获取方法，使用更方便
 func GetResource[T IComponent](r *Resources) (T, bool) {
 	var zero T
 	t := reflect.TypeOf(zero)
