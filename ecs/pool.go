@@ -1,8 +1,9 @@
 package ecs
 
 import (
-	"github.com/INT-Game/go-ecs/array"
 	"reflect"
+
+	"github.com/INT-Game/go-ecs/array"
 )
 
 type Pool[T IComponent] struct {

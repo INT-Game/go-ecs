@@ -1,9 +1,5 @@
 package ecs
 
-import (
-	"reflect"
-)
-
 type EntityId uint64
 type ComponentId uint64
 
@@ -12,6 +8,8 @@ type IWorld interface {
 
 type World struct {
 	IWorld
+	Commands        *Commands
+	Query           *Query
 	resourceMap     map[ComponentId]*ResourceInfo
 	componentMap    map[ComponentId]IComponentInfo
 	entities        map[EntityId]IEntity
@@ -28,6 +26,9 @@ func NewWorld() *World {
 		startUpSystems: make([]ISystem, 0),
 		updateSystems:  make([]ISystem, 0),
 	}
+
+	w.Commands = NewCommands(w)
+	w.Query = NewQuery(w)
 
 	return w
 }
@@ -69,14 +70,4 @@ func (w *World) Shutdown() {
 	w.entities = make(map[EntityId]IEntity)
 	w.startUpSystems = make([]ISystem, 0)
 	w.updateSystems = make([]ISystem, 0)
-}
-
-func CreateComponent[T IComponent](w *World) T {
-	t := reflect.TypeOf((*T)(nil)).Elem()
-	componentId := ComponentId(CompIdGetter.GetID(t))
-	if _, ok := w.componentMap[componentId]; !ok {
-		w.componentMap[componentId] = NewComponentInfo[T]()
-	}
-	componentInfo := w.componentMap[componentId]
-	return componentInfo.CreateComponent().(T)
 }

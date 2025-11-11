@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/INT-Game/go-ecs/ecs"
 )
 
@@ -23,9 +24,9 @@ type NameSystem struct {
 	ecs.System
 }
 
-func NewNameSystem(commands *ecs.Commands, query *ecs.Query) *NameSystem {
+func NewNameSystem(w *ecs.World) *NameSystem {
 	return &NameSystem{
-		System: *ecs.NewSystem(commands, query),
+		System: *ecs.NewSystem(w),
 	}
 }
 
@@ -43,9 +44,9 @@ type IdSystem struct {
 	ecs.System
 }
 
-func NewIdSystem(commands *ecs.Commands, query *ecs.Query) *IdSystem {
+func NewIdSystem(w *ecs.World) *IdSystem {
 	return &IdSystem{
-		System: *ecs.NewSystem(commands, query),
+		System: *ecs.NewSystem(w),
 	}
 }
 
@@ -61,25 +62,21 @@ func (s *IdSystem) Update() {
 
 func main() {
 	w := ecs.NewWorld()
-	commands := ecs.NewCommands(w)
-	query := ecs.NewQuery(w)
 
-	w.AddUpdateSystem(NewNameSystem(commands, query))
-	w.AddUpdateSystem(NewIdSystem(commands, query))
+	w.AddUpdateSystem(NewNameSystem(w))
+	w.AddUpdateSystem(NewIdSystem(w))
 
-	nameComponent := ecs.CreateComponent[*NameComponent](w)
+	nameComponent := ecs.SpawnComponent[*NameComponent](w)
 	nameComponent.Name = "TestNameComponent"
 
-	idComponent := ecs.CreateComponent[*IDComponent](w)
+	idComponent := ecs.SpawnComponent[*IDComponent](w)
 	idComponent.Id = "TestIDComponent"
 
-	commands.Spawn(nameComponent, idComponent)
-	commands.Spawn(nameComponent)
-	entityA := commands.SpawnAndReturnEntity(nameComponent)
+	entityA := ecs.SpawnEmptyEntity(w, nameComponent)
 	w.Update()
 
 	fmt.Println("================================")
 
-	commands.DestroyEntity(entityA)
+	w.Commands.DestroyEntity(entityA)
 	w.Update()
 }

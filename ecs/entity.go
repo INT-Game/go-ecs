@@ -1,6 +1,9 @@
 package ecs
 
-import "sync/atomic"
+import (
+	"reflect"
+	"sync/atomic"
+)
 
 var (
 	eidIncr uint64
@@ -9,34 +12,23 @@ var (
 type IEntity interface {
 	Identifier
 	GetComponentContainer() ComponentContainer
+	AddComponents(components ...IComponent)
+	RemoveComponents(components ...IComponent)
 }
 
 type Entity struct {
 	IEntity
+	w                  *World
 	id                 uint64
 	componentContainer ComponentContainer
 }
 
-func NewEntity() *Entity {
+func NewEntity(w *World) *Entity {
 	return &Entity{
+		w:                  w,
 		id:                 atomic.AddUint64(&eidIncr, 1),
 		componentContainer: make(ComponentContainer),
 	}
-}
-
-func NewEntities(amount int) []*Entity {
-	entities := make([]*Entity, amount)
-
-	lastID := atomic.AddUint64(&eidIncr, uint64(amount))
-	for i := 0; i < amount; i++ {
-		// 完全初始化每个实体
-		entities[i] = &Entity{
-			id:                 lastID - uint64(amount) + uint64(i) + 1,
-			componentContainer: make(ComponentContainer),
-		}
-	}
-
-	return entities
 }
 
 func (e *Entity) ID() uint64 {
@@ -45,4 +37,43 @@ func (e *Entity) ID() uint64 {
 
 func (e *Entity) GetComponentContainer() ComponentContainer {
 	return e.componentContainer
+}
+
+func (e *Entity) AddComponents(components ...IComponent) {
+	if _, ok := e.w.entities[EntityId(e.ID())]; !ok {
+		e.w.entities[EntityId(e.ID())] = e
+	}
+
+	for _, component := range components {
+		componentId := ComponentId(CompIdGetter.GetID(reflect.TypeOf(component)))
+		componentInfo, ok := e.w.componentMap[componentId]
+		if !ok {
+			return
+		}
+
+		if target, exists := e.componentContainer[componentId]; exists {
+			componentInfo.DestroyComponent(target)
+			delete(e.componentContainer, componentId)
+			componentInfo.RemoveEntity(e)
+		}
+
+		e.componentContainer[componentId] = component
+		componentInfo.AddEntity(e)
+	}
+}
+
+func (e *Entity) RemoveComponents(components ...IComponent) {
+	for _, component := range components {
+		componentId := ComponentId(CompIdGetter.GetID(reflect.TypeOf(component)))
+		componentInfo, ok := e.w.componentMap[componentId]
+		if !ok {
+			return
+		}
+
+		if target, exists := e.componentContainer[componentId]; exists {
+			componentInfo.DestroyComponent(target)
+			delete(e.componentContainer, componentId)
+			componentInfo.RemoveEntity(e)
+		}
+	}
 }

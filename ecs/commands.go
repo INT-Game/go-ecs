@@ -12,17 +12,6 @@ func NewCommands(w *World) *Commands {
 	}
 }
 
-func (c *Commands) Spawn(components ...IComponent) *Commands {
-	_ = c.SpawnAndReturnEntity(components...)
-	return c
-}
-
-func (c *Commands) SpawnAndReturnEntity(components ...IComponent) IEntity {
-	entity := NewEntity()
-	c.doSpawn(entity, components...)
-	return entity
-}
-
 func (c *Commands) doSpawn(entity IEntity, components ...IComponent) {
 	if len(components) == 0 {
 		return
@@ -53,12 +42,6 @@ func (c *Commands) doSpawn(entity IEntity, components ...IComponent) {
 }
 
 func (c *Commands) DestroyEntity(entity IEntity) *Commands {
-	//for componentId, component := range entity.GetComponentContainer() {
-	//	componentInfo := c.w.componentMap[componentId]
-	//	componentInfo.DestroyComponent(component)
-	//	componentInfo.RemoveEntity(entity)
-	//}
-	//delete(c.w.entities, EntityId(entity.ID()))
 	c.w.destroyEntities = append(c.w.destroyEntities, entity)
 	return c
 }

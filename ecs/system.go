@@ -11,10 +11,10 @@ type System struct {
 	Query    *Query
 }
 
-func NewSystem(commands *Commands, query *Query) *System {
+func NewSystem(w *World) *System {
 	return &System{
-		Commands: commands,
-		Query:    query,
+		Commands: w.Commands,
+		Query:    w.Query,
 	}
 }
 
