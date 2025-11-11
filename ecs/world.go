@@ -4,12 +4,16 @@ type EntityId uint64
 type ComponentId uint64
 
 type IWorld interface {
+	GetCommands() *Commands
+	GetQuery() *Query
+	GetComponentMap() map[ComponentId]IComponentInfo
+	GetEntities() map[EntityId]IEntity
 }
 
 type World struct {
 	IWorld
-	Commands        *Commands
-	Query           *Query
+	commands        *Commands
+	query           *Query
 	resourceMap     map[ComponentId]*ResourceInfo
 	componentMap    map[ComponentId]IComponentInfo
 	entities        map[EntityId]IEntity
@@ -27,10 +31,25 @@ func NewWorld() *World {
 		updateSystems:  make([]ISystem, 0),
 	}
 
-	w.Commands = NewCommands(w)
-	w.Query = NewQuery(w)
+	w.commands = NewCommands(w)
+	w.query = NewQuery(w)
 
 	return w
+}
+
+func (w *World) GetCommands() *Commands {
+	return w.commands
+}
+
+func (w *World) GetQuery() *Query {
+	return w.query
+}
+
+func (w *World) GetComponentMap() map[ComponentId]IComponentInfo {
+	return w.componentMap
+}
+func (w *World) GetEntities() map[EntityId]IEntity {
+	return w.entities
 }
 
 func (w *World) AddStartUpSystem(startUpSystem ISystem) *World {

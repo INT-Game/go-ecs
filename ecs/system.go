@@ -13,8 +13,8 @@ type System struct {
 
 func NewSystem(w *World) *System {
 	return &System{
-		Commands: w.Commands,
-		Query:    w.Query,
+		Commands: w.commands,
+		Query:    w.query,
 	}
 }
 

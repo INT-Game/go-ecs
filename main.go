@@ -77,6 +77,6 @@ func main() {
 
 	fmt.Println("================================")
 
-	w.Commands.DestroyEntity(entityA)
+	w.GetCommands().DestroyEntity(entityA)
 	w.Update()
 }

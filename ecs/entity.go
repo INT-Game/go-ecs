@@ -18,12 +18,12 @@ type IEntity interface {
 
 type Entity struct {
 	IEntity
-	w                  *World
+	w                  IWorld
 	id                 uint64
 	componentContainer ComponentContainer
 }
 
-func NewEntity(w *World) *Entity {
+func NewEntity(w IWorld) *Entity {
 	return &Entity{
 		w:                  w,
 		id:                 atomic.AddUint64(&eidIncr, 1),
@@ -40,13 +40,13 @@ func (e *Entity) GetComponentContainer() ComponentContainer {
 }
 
 func (e *Entity) AddComponents(components ...IComponent) {
-	if _, ok := e.w.entities[EntityId(e.ID())]; !ok {
-		e.w.entities[EntityId(e.ID())] = e
+	if _, ok := e.w.GetEntities()[EntityId(e.ID())]; !ok {
+		e.w.GetEntities()[EntityId(e.ID())] = e
 	}
 
 	for _, component := range components {
 		componentId := ComponentId(CompIdGetter.GetID(reflect.TypeOf(component)))
-		componentInfo, ok := e.w.componentMap[componentId]
+		componentInfo, ok := e.w.GetComponentMap()[componentId]
 		if !ok {
 			return
 		}
@@ -65,7 +65,7 @@ func (e *Entity) AddComponents(components ...IComponent) {
 func (e *Entity) RemoveComponents(components ...IComponent) {
 	for _, component := range components {
 		componentId := ComponentId(CompIdGetter.GetID(reflect.TypeOf(component)))
-		componentInfo, ok := e.w.componentMap[componentId]
+		componentInfo, ok := e.w.GetComponentMap()[componentId]
 		if !ok {
 			return
 		}

@@ -2,13 +2,13 @@ package ecs
 
 import "reflect"
 
-func SpawnEmptyEntity(w *World, components ...IComponent) IEntity {
+func SpawnEmptyEntity(w IWorld, components ...IComponent) IEntity {
 	entity := NewEntity(w)
-	w.Commands.doSpawn(entity, components...)
+	w.GetCommands().doSpawn(entity, components...)
 	return entity
 }
 
-func SpawnEntity[T IEntity](w *World, components ...IComponent) T {
+func SpawnEntity[T IEntity](w IWorld, components ...IComponent) T {
 	var e T
 	t := reflect.TypeOf((*T)(nil)).Elem()
 	if t.Kind() == reflect.Ptr {
@@ -35,16 +35,16 @@ func SpawnEntity[T IEntity](w *World, components ...IComponent) T {
 		}
 	}
 
-	w.Commands.doSpawn(e, components...)
+	w.GetCommands().doSpawn(e, components...)
 	return e
 }
 
-func SpawnComponent[T IComponent](w *World) T {
+func SpawnComponent[T IComponent](w IWorld) T {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 	componentId := ComponentId(CompIdGetter.GetID(t))
-	if _, ok := w.componentMap[componentId]; !ok {
-		w.componentMap[componentId] = NewComponentInfo[T]()
+	if _, ok := w.GetComponentMap()[componentId]; !ok {
+		w.GetComponentMap()[componentId] = NewComponentInfo[T]()
 	}
-	componentInfo := w.componentMap[componentId]
+	componentInfo := w.GetComponentMap()[componentId]
 	return componentInfo.CreateComponent().(T)
 }
