@@ -61,6 +61,7 @@ func (c *ComponentInfo[T]) Density() []uint64 {
 type IComponent interface {
 	Identifier
 	IdentifierSetter
+	Init()
 	Destroy()
 }
 
@@ -80,6 +81,10 @@ func (c *Component) SetID(id uint64) {
 
 func (c *Component) ID() uint64 {
 	return c.id
+}
+
+func (c *Component) Init() {
+
 }
 
 func (c *Component) Destroy() {

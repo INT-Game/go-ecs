@@ -26,6 +26,7 @@ func (p *Pool[T]) Create() T {
 		componentId := CompIdGetter.GetID(reflect.TypeOf((*T)(nil)).Elem())
 		component := p.doCreate()
 		component.SetID(componentId)
+		component.Init()
 		p.instances.PushBack(component)
 	}
 
