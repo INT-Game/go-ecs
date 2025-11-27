@@ -78,13 +78,13 @@ func (e *Entity) RemoveComponents(components ...IComponent) {
 	}
 }
 
-func GetComponent[T IComponent](e IEntity) T {
+func GetComponent[T IComponent](e IEntity) (T, bool) {
 	t := reflect.TypeOf((*T)(nil)).Elem()
 	componentId := CompIdGetter.GetID(t)
 	component, ok := e.GetComponentContainer()[ComponentId(componentId)]
 	if !ok {
 		var zero T
-		return zero
+		return zero, false
 	}
-	return component.(T)
+	return component.(T), true
 }

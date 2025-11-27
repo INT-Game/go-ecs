@@ -1,6 +1,7 @@
 package ecs
 
 type ISystem interface {
+	GetWorld() *World
 	StartUp()
 	Update()
 }
@@ -18,6 +19,10 @@ func NewSystem(w *World) *System {
 		Commands: w.commands,
 		Query:    w.query,
 	}
+}
+
+func (s *System) GetWorld() *World {
+	return s.World
 }
 
 func (s *System) StartUp() {
