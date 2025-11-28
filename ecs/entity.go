@@ -11,6 +11,7 @@ var (
 
 type IEntity interface {
 	Identifier
+	GetEcsWorld() IWorld
 	GetComponentContainer() ComponentContainer
 	AddComponents(components ...IComponent)
 	RemoveComponents(components ...IComponent)
@@ -33,6 +34,10 @@ func NewEntity(w IWorld) *Entity {
 
 func (e *Entity) ID() uint64 {
 	return e.id
+}
+
+func (e *Entity) GetEcsWorld() IWorld {
+	return e.w
 }
 
 func (e *Entity) GetComponentContainer() ComponentContainer {
