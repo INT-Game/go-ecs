@@ -31,9 +31,9 @@ type ComponentInfo[T IComponent] struct {
 	sparseSet *sparse_set.SparseSet[uint64]
 }
 
-func NewComponentInfo[T IComponent]() *ComponentInfo[T] {
+func NewComponentInfo[T IComponent](w IWorld) *ComponentInfo[T] {
 	return &ComponentInfo[T]{
-		pool:      NewPool[T](),
+		pool:      NewPool[T](w),
 		sparseSet: sparse_set.NewSparseSet[uint64](32),
 	}
 }

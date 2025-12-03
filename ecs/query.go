@@ -22,7 +22,7 @@ func (q *Query) Query(components ...IComponent) []IEntity {
 	component := components[0]
 	remains := components[1:]
 
-	componentId := ComponentId(CompIdGetter.GetID(reflect.TypeOf(component)))
+	componentId := ComponentId(q.w.GetCompId(reflect.TypeOf(component)))
 	if componentInfo, ok := q.w.componentMap[componentId]; ok {
 		density := componentInfo.Density()
 		for i := 0; i < len(density); i++ {
@@ -47,7 +47,7 @@ func (q *Query) doQueryRemains(e IEntity, components ...IComponent) bool {
 	component := components[0]
 	remains := components[1:]
 
-	componentId := CompIdGetter.GetID(reflect.TypeOf(component))
+	componentId := q.w.GetCompId(reflect.TypeOf(component))
 	if _, ok := e.GetComponentContainer()[ComponentId(componentId)]; ok {
 		return q.doQueryRemains(e, remains...)
 	}
@@ -57,7 +57,7 @@ func (q *Query) doQueryRemains(e IEntity, components ...IComponent) bool {
 
 // Has 判断实体是否包含指定组件
 func (q *Query) Has(e IEntity, c IComponent) bool {
-	componentId := CompIdGetter.GetID(reflect.TypeOf(c))
+	componentId := q.w.GetCompId(reflect.TypeOf(c))
 	if _, ok := e.GetComponentContainer()[ComponentId(componentId)]; ok {
 		return true
 	}
@@ -71,7 +71,7 @@ func (q *Query) Get(e IEntity, c IComponent) (IComponent, bool) {
 		return nil, false
 	}
 
-	componentId := CompIdGetter.GetID(reflect.TypeOf(c))
+	componentId := q.w.GetCompId(reflect.TypeOf(c))
 	if component, ok := e.GetComponentContainer()[ComponentId(componentId)]; ok {
 		return component, true
 	}

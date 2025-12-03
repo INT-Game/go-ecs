@@ -13,7 +13,7 @@ func NewResources(w *World) *Resources {
 }
 
 func (r *Resources) Has(resource IComponent) bool {
-	resourceId := ResIdGetter.GetID(reflect.TypeOf(resource))
+	resourceId := r.w.GetResId(reflect.TypeOf(resource))
 	if _, ok := r.w.resourceMap[ComponentId(resourceId)]; ok && r.w.resourceMap[ComponentId(resourceId)].resource != nil {
 		return true
 	}
@@ -22,7 +22,7 @@ func (r *Resources) Has(resource IComponent) bool {
 
 // Get 获取指定类型的资源
 func (r *Resources) Get(resource IComponent) (IComponent, bool) {
-	resourceId := ResIdGetter.GetID(reflect.TypeOf(resource))
+	resourceId := r.w.GetResId(reflect.TypeOf(resource))
 	if resourceInfo, ok := r.w.resourceMap[ComponentId(resourceId)]; ok && resourceInfo.resource != nil {
 		return resourceInfo.resource, true
 	}
@@ -37,7 +37,7 @@ func GetResource[T IComponent](r *Resources) (T, bool) {
 		t = reflect.TypeOf((*T)(nil)).Elem()
 	}
 
-	resourceId := ResIdGetter.GetID(t)
+	resourceId := r.w.GetResId(t)
 	if resourceInfo, ok := r.w.resourceMap[ComponentId(resourceId)]; ok && resourceInfo.resource != nil {
 		if res, ok := resourceInfo.resource.(T); ok {
 			return res, true

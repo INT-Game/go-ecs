@@ -21,7 +21,7 @@ func (c *Commands) doSpawn(entity IEntity, components ...IComponent) {
 	remains := components[1:]
 
 	// 设置组件的ID
-	component.SetID(CompIdGetter.GetID(reflect.TypeOf(component)))
+	component.SetID(c.w.GetResId(reflect.TypeOf(component)))
 	componentId := ComponentId(component.ID())
 
 	if _, ok := c.w.componentMap[componentId]; !ok {
@@ -54,7 +54,7 @@ func (c *Commands) Execute() {
 }
 
 func (c *Commands) SetResource(component IComponent) *Commands {
-	resourceId := ResIdGetter.GetID(reflect.TypeOf(component))
+	resourceId := c.w.GetResId(reflect.TypeOf(component))
 	if _, ok := c.w.resourceMap[ComponentId(resourceId)]; !ok {
 		c.w.resourceMap[ComponentId(resourceId)] = NewResourceInfo(func() {}, func() {})
 	}
@@ -63,7 +63,7 @@ func (c *Commands) SetResource(component IComponent) *Commands {
 }
 
 func (c *Commands) RemoveResource(component IComponent) *Commands {
-	resourceId := ResIdGetter.GetID(reflect.TypeOf(component))
+	resourceId := c.w.GetResId(reflect.TypeOf(component))
 	if resourceInfo, ok := c.w.resourceMap[ComponentId(resourceId)]; ok {
 		resourceInfo.destroyFunc()
 		resourceInfo.resource = nil

@@ -7,12 +7,14 @@ import (
 )
 
 type Pool[T IComponent] struct {
+	w         IWorld
 	instances array.Array[IComponent]
 	caches    array.Array[IComponent]
 }
 
-func NewPool[T IComponent]() *Pool[T] {
+func NewPool[T IComponent](w IWorld) *Pool[T] {
 	return &Pool[T]{
+		w:         w,
 		instances: array.New[IComponent](),
 		caches:    array.New[IComponent](),
 	}
@@ -23,7 +25,7 @@ func (p *Pool[T]) Create() T {
 		p.instances.PushBack(p.caches.Back())
 		p.caches.PopBack()
 	} else {
-		componentId := CompIdGetter.GetID(reflect.TypeOf((*T)(nil)).Elem())
+		componentId := p.w.GetCompId(reflect.TypeOf((*T)(nil)).Elem())
 		component := p.doCreate()
 		component.SetID(componentId)
 		component.Init()

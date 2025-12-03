@@ -41,9 +41,9 @@ func SpawnEntity[T IEntity](w IWorld, components ...IComponent) T {
 
 func SpawnComponent[T IComponent](w IWorld) T {
 	t := reflect.TypeOf((*T)(nil)).Elem()
-	componentId := ComponentId(CompIdGetter.GetID(t))
+	componentId := ComponentId(w.GetCompId(t))
 	if _, ok := w.GetComponentMap()[componentId]; !ok {
-		w.GetComponentMap()[componentId] = NewComponentInfo[T]()
+		w.GetComponentMap()[componentId] = NewComponentInfo[T](w)
 	}
 	componentInfo := w.GetComponentMap()[componentId]
 	return componentInfo.CreateComponent().(T)

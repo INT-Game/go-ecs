@@ -1,9 +1,17 @@
 package ecs
 
+import (
+	"reflect"
+	"sync/atomic"
+)
+
 type EntityId uint64
 type ComponentId uint64
 
 type IWorld interface {
+	IncrEntId() uint64
+	GetResId(t reflect.Type) uint64
+	GetCompId(t reflect.Type) uint64
 	GetCommands() *Commands
 	GetQuery() *Query
 	GetComponentMap() map[ComponentId]IComponentInfo
@@ -12,6 +20,11 @@ type IWorld interface {
 
 type World struct {
 	IWorld
+
+	entId        uint64
+	resIdGetter  *IdentityGetter
+	compIdGetter *IdentityGetter
+
 	commands        *Commands
 	query           *Query
 	resourceMap     map[ComponentId]*ResourceInfo
@@ -24,6 +37,9 @@ type World struct {
 
 func NewWorld() *World {
 	w := &World{
+		resIdGetter:  NewIdentityGetter(),
+		compIdGetter: NewIdentityGetter(),
+		
 		resourceMap:    make(map[ComponentId]*ResourceInfo),
 		componentMap:   make(map[ComponentId]IComponentInfo),
 		entities:       make(map[EntityId]IEntity),
@@ -35,6 +51,18 @@ func NewWorld() *World {
 	w.query = NewQuery(w)
 
 	return w
+}
+
+func (w *World) IncrEntId() uint64 {
+	return atomic.AddUint64(&w.entId, 1)
+}
+
+func (w *World) GetResId(t reflect.Type) uint64 {
+	return w.resIdGetter.GetID(t)
+}
+
+func (w *World) GetCompId(t reflect.Type) uint64 {
+	return w.compIdGetter.GetID(t)
 }
 
 func (w *World) GetCommands() *Commands {

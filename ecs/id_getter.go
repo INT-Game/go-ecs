@@ -4,11 +4,6 @@ import (
 	"reflect"
 )
 
-var (
-	ResIdGetter  = NewIdentityGetter()
-	CompIdGetter = NewIdentityGetter()
-)
-
 type IdentityGetter struct {
 	idIncr uint64
 	idMap  map[reflect.Type]uint64
