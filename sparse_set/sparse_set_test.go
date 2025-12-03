@@ -5,7 +5,7 @@ import (
 )
 
 func TestSparseSet_Add_Contains_Remove(t *testing.T) {
-	s := NewSparseSet[int32](8)
+	s := NewSparseSet[uint32](8)
 	s.Add(10)
 	s.Add(20)
 	s.Add(30)
@@ -31,7 +31,7 @@ func TestSparseSet_Add_Contains_Remove(t *testing.T) {
 }
 
 func TestSparseSet_Clear(t *testing.T) {
-	s := NewSparseSet[int32](4)
+	s := NewSparseSet[uint32](4)
 	s.Add(1)
 	s.Add(2)
 	s.Add(3)
@@ -42,7 +42,7 @@ func TestSparseSet_Clear(t *testing.T) {
 }
 
 func TestSparseSet_DuplicateAdd(t *testing.T) {
-	s := NewSparseSet[int32](4)
+	s := NewSparseSet[uint32](4)
 	s.Add(5)
 	s.Add(5)
 	count := 0
