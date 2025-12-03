@@ -1,8 +1,8 @@
 package sparse_set
 
-type Density[T int32 | int64] []T
+type Density[T uint32 | uint64] []T
 
-func NewDensity[T int32 | int64]() Density[T] {
+func NewDensity[T uint32 | uint64]() Density[T] {
 	return make(Density[T], 0)
 }
 

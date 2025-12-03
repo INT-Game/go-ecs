@@ -28,13 +28,13 @@ type IComponentInfo interface {
 type ComponentInfo[T IComponent] struct {
 	IComponentInfo
 	pool      *Pool[T]
-	sparseSet *sparse_set.SparseSet[uint64]
+	sparseSet *sparse_set.SparseSet[int32]
 }
 
 func NewComponentInfo[T IComponent](w IWorld) *ComponentInfo[T] {
 	return &ComponentInfo[T]{
 		pool:      NewPool[T](w),
-		sparseSet: sparse_set.NewSparseSet[uint64](32),
+		sparseSet: sparse_set.NewSparseSet[int32](32),
 	}
 }
 
