@@ -21,7 +21,7 @@ func (c *Commands) doSpawn(entity IEntity, components ...IComponent) {
 	remains := components[1:]
 
 	// 设置组件的ID
-	component.SetID(c.w.GetResId(reflect.TypeOf(component)))
+	component.SetID(c.w.GetCompId(reflect.TypeOf(component)))
 	componentId := ComponentId(component.ID())
 
 	if _, ok := c.w.componentMap[componentId]; !ok {

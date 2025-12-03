@@ -54,6 +54,10 @@ func (c *ComponentInfo[T]) DestroyComponent(elem IComponent) {
 	c.pool.Destroy(elem)
 }
 
+func (c *ComponentInfo[T]) Density() []uint64 {
+	return c.sparseSet.Density()
+}
+
 type IComponent interface {
 	Identifier
 	IdentifierSetter
