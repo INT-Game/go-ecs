@@ -50,6 +50,7 @@ func (c *Commands) Execute() {
 	for _, entity := range c.w.destroyEntities {
 		c.w.destroy(entity)
 	}
+	c.w.destroyEntities = c.w.destroyEntities[:0]
 }
 
 func (c *Commands) SetResource(component IComponent) *Commands {
