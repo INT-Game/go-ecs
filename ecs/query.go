@@ -65,6 +65,16 @@ func (q *Query) Has(e IEntity, c IComponent) bool {
 	return false
 }
 
+// Contains 判断实体是否包含所有指定组件
+func (q *Query) Contains(e IEntity, components ...IComponent) bool {
+	for _, c := range components {
+		if !q.Has(e, c) {
+			return false
+		}
+	}
+	return true
+}
+
 // Get 获取实体的指定组件
 func (q *Query) Get(e IEntity, c IComponent) (IComponent, bool) {
 	if !q.Has(e, c) {
