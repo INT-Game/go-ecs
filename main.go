@@ -26,7 +26,7 @@ func NewNameSystem(w *ecs.World) *NameSystem {
 	}
 }
 
-func (s *NameSystem) Update(entity ecs.IEntity) {
+func (s *NameSystem) UpdateEntity(entity ecs.IEntity) {
 	comp, ok := s.Query.Get(entity, &NameComponent{})
 	if ok {
 		fmt.Println(comp.(*NameComponent).Name)
@@ -43,7 +43,7 @@ func NewIdSystem(w *ecs.World) *IdSystem {
 	}
 }
 
-func (s *IdSystem) Update(entity ecs.IEntity) {
+func (s *IdSystem) UpdateEntity(entity ecs.IEntity) {
 	comp, ok := s.Query.Get(entity, &IDComponent{})
 	if ok {
 		fmt.Println(comp.(*IDComponent).Id)

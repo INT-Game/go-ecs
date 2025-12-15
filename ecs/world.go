@@ -107,9 +107,7 @@ func (w *World) Startup() {
 
 func (w *World) Update() {
 	for _, system := range w.updateSystems {
-		system.rangeEntities(func(entity IEntity) {
-			system.Update(entity)
-		})
+		system.Update()
 	}
 }
 

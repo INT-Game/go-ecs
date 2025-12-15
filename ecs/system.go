@@ -3,8 +3,9 @@ package ecs
 type ISystem interface {
 	GetWorld() *World
 	StartUp()
-	Update(entity IEntity)
-	rangeEntities(fn func(entity IEntity))
+	Update()
+	UpdateEntity(entity IEntity)
+	RangeEntities(fn func(entity IEntity))
 }
 
 type System struct {
@@ -32,11 +33,17 @@ func (s *System) StartUp() {
 
 }
 
-func (s *System) Update(_ IEntity) {
+func (s *System) Update() {
+	s.RangeEntities(func(entity IEntity) {
+		s.UpdateEntity(entity)
+	})
+}
+
+func (s *System) UpdateEntity(_ IEntity) {
 
 }
 
-func (s *System) rangeEntities(fn func(entity IEntity)) {
+func (s *System) RangeEntities(fn func(entity IEntity)) {
 	for _, entity := range s.Query.Query(s.queryList...) {
 		fn(entity)
 	}
