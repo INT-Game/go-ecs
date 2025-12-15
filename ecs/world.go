@@ -39,7 +39,7 @@ func NewWorld() *World {
 	w := &World{
 		resIdGetter:  NewIdentityGetter(),
 		compIdGetter: NewIdentityGetter(),
-		
+
 		resourceMap:    make(map[ComponentId]*ResourceInfo),
 		componentMap:   make(map[ComponentId]IComponentInfo),
 		entities:       make(map[EntityId]IEntity),
@@ -107,7 +107,9 @@ func (w *World) Startup() {
 
 func (w *World) Update() {
 	for _, system := range w.updateSystems {
-		system.Update()
+		system.rangeEntities(func(entity IEntity) {
+			system.Update(entity)
+		})
 	}
 }
 

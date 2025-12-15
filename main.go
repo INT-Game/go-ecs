@@ -16,27 +16,20 @@ type IDComponent struct {
 	Id string
 }
 
-type Timer struct {
-	ecs.Component
-}
-
 type NameSystem struct {
 	ecs.System
 }
 
 func NewNameSystem(w *ecs.World) *NameSystem {
 	return &NameSystem{
-		System: *ecs.NewSystem(w),
+		System: *ecs.NewSystem(w, &NameComponent{}),
 	}
 }
 
-func (s *NameSystem) Update() {
-	entities := s.Query.Query(&NameComponent{})
-	for _, entity := range entities {
-		comp, ok := s.Query.Get(entity, &NameComponent{})
-		if ok {
-			fmt.Println(comp.(*NameComponent).Name)
-		}
+func (s *NameSystem) Update(entity ecs.IEntity) {
+	comp, ok := s.Query.Get(entity, &NameComponent{})
+	if ok {
+		fmt.Println(comp.(*NameComponent).Name)
 	}
 }
 
@@ -46,17 +39,14 @@ type IdSystem struct {
 
 func NewIdSystem(w *ecs.World) *IdSystem {
 	return &IdSystem{
-		System: *ecs.NewSystem(w),
+		System: *ecs.NewSystem(w, &IDComponent{}),
 	}
 }
 
-func (s *IdSystem) Update() {
-	entities := s.Query.Query(&IDComponent{})
-	for _, entity := range entities {
-		comp, ok := s.Query.Get(entity, &IDComponent{})
-		if ok {
-			fmt.Println(comp.(*IDComponent).Id)
-		}
+func (s *IdSystem) Update(entity ecs.IEntity) {
+	comp, ok := s.Query.Get(entity, &IDComponent{})
+	if ok {
+		fmt.Println(comp.(*IDComponent).Id)
 	}
 }
 

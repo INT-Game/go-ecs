@@ -3,21 +3,24 @@ package ecs
 type ISystem interface {
 	GetWorld() *World
 	StartUp()
-	Update()
+	Update(entity IEntity)
+	rangeEntities(fn func(entity IEntity))
 }
 
 type System struct {
 	ISystem
-	World    *World
-	Commands *Commands
-	Query    *Query
+	World     *World
+	Commands  *Commands
+	Query     *Query
+	queryList []IComponent
 }
 
-func NewSystem(w *World) *System {
+func NewSystem(w *World, queryList ...IComponent) *System {
 	return &System{
-		World:    w,
-		Commands: w.commands,
-		Query:    w.query,
+		World:     w,
+		Commands:  w.commands,
+		Query:     w.query,
+		queryList: queryList,
 	}
 }
 
@@ -29,6 +32,12 @@ func (s *System) StartUp() {
 
 }
 
-func (s *System) Update() {
+func (s *System) Update(_ IEntity) {
 
+}
+
+func (s *System) rangeEntities(fn func(entity IEntity)) {
+	for _, entity := range s.Query.Query(s.queryList...) {
+		fn(entity)
+	}
 }
