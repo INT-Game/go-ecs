@@ -4,7 +4,6 @@ type ISystem interface {
 	GetWorld() *World
 	StartUp()
 	Update()
-	UpdateEntity(entity IEntity)
 	RangeEntities(fn func(entity IEntity))
 }
 
@@ -30,17 +29,9 @@ func (s *System) GetWorld() *World {
 }
 
 func (s *System) StartUp() {
-
 }
 
 func (s *System) Update() {
-	s.RangeEntities(func(entity IEntity) {
-		s.UpdateEntity(entity)
-	})
-}
-
-func (s *System) UpdateEntity(_ IEntity) {
-
 }
 
 func (s *System) RangeEntities(fn func(entity IEntity)) {
