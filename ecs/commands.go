@@ -13,6 +13,10 @@ func NewCommands(w *World) *Commands {
 }
 
 func (c *Commands) doSpawn(entity IEntity, components ...IComponent) {
+	if _, ok := c.w.entities[EntityId(entity.ID())]; !ok {
+		c.w.entities[EntityId(entity.ID())] = entity
+	}
+
 	if len(components) == 0 {
 		return
 	}
