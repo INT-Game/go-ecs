@@ -22,8 +22,10 @@ func NewPool[T IComponent](w IWorld) *Pool[T] {
 
 func (p *Pool[T]) Create() T {
 	if !p.caches.Empty() {
-		p.instances.PushBack(p.caches.Back())
+		component := p.caches.Back()
 		p.caches.PopBack()
+		component.Init()
+		p.instances.PushBack(component)
 	} else {
 		componentId := p.w.GetCompId(reflect.TypeOf((*T)(nil)).Elem())
 		component := p.doCreate()
