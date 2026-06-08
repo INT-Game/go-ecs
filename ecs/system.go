@@ -5,6 +5,7 @@ type ISystem interface {
 	StartUp()
 	Update()
 	RangeEntities(fn func(entity IEntity))
+	RangeEntitiesByQueryList(fn func(entity IEntity), queryList ...IComponent)
 }
 
 type System struct {
@@ -36,6 +37,12 @@ func (s *System) Update() {
 
 func (s *System) RangeEntities(fn func(entity IEntity)) {
 	for _, entity := range s.Query.Query(s.queryList...) {
+		fn(entity)
+	}
+}
+
+func (s *System) RangeEntitiesByQueryList(fn func(entity IEntity), queryList ...IComponent) {
+	for _, entity := range s.Query.Query(queryList...) {
 		fn(entity)
 	}
 }
