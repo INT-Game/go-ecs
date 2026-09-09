@@ -13,7 +13,6 @@ type IEntity interface {
 }
 
 type Entity struct {
-	IEntity
 	w                  IWorld
 	id                 uint64
 	componentContainer ComponentContainer
@@ -48,13 +47,14 @@ func (e *Entity) AddComponents(components ...IComponent) {
 		componentId := ComponentId(e.w.GetCompId(reflect.TypeOf(component)))
 		componentInfo, ok := e.w.GetComponentMap()[componentId]
 		if !ok {
-			return
+			continue
 		}
 
 		if target, exists := e.componentContainer[componentId]; exists {
+			if target == component {
+				continue
+			}
 			componentInfo.DestroyComponent(target)
-			delete(e.componentContainer, componentId)
-			componentInfo.RemoveEntity(e)
 		}
 
 		e.componentContainer[componentId] = component
@@ -67,7 +67,7 @@ func (e *Entity) RemoveComponents(components ...IComponent) {
 		componentId := ComponentId(e.w.GetCompId(reflect.TypeOf(component)))
 		componentInfo, ok := e.w.GetComponentMap()[componentId]
 		if !ok {
-			return
+			continue
 		}
 
 		if target, exists := e.componentContainer[componentId]; exists {

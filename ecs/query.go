@@ -19,40 +19,46 @@ func (q *Query) Query(components ...IComponent) []IEntity {
 		return entities
 	}
 
-	component := components[0]
-	remains := components[1:]
+	componentIDs := make([]ComponentId, len(components))
+	baseIndex := -1
+	var density []uint64
+	for i, component := range components {
+		componentID := ComponentId(q.w.GetCompId(reflect.TypeOf(component)))
+		componentInfo, ok := q.w.componentMap[componentID]
+		if !ok {
+			return entities
+		}
+		componentIDs[i] = componentID
+		candidate := componentInfo.Density()
+		if baseIndex == -1 || len(candidate) < len(density) {
+			baseIndex = i
+			density = candidate
+		}
+	}
 
-	componentId := ComponentId(q.w.GetCompId(reflect.TypeOf(component)))
-	if componentInfo, ok := q.w.componentMap[componentId]; ok {
-		density := componentInfo.Density()
-		for i := 0; i < len(density); i++ {
-			var entity IEntity
-			entityId := EntityId(density[i])
-			if entity, ok = q.w.entities[entityId]; ok {
-				if q.doQueryRemains(entity, remains...) {
-					entities = append(entities, entity)
-				}
+	entities = make([]IEntity, 0, len(density))
+	for _, id := range density {
+		entity, ok := q.w.entities[EntityId(id)]
+		if !ok {
+			continue
+		}
+		container := entity.GetComponentContainer()
+		matched := true
+		for i, componentID := range componentIDs {
+			if i == baseIndex {
+				continue
 			}
+			if _, ok := container[componentID]; !ok {
+				matched = false
+				break
+			}
+		}
+		if matched {
+			entities = append(entities, entity)
 		}
 	}
 
 	return entities
-}
-
-func (q *Query) doQueryRemains(e IEntity, components ...IComponent) bool {
-	if len(components) == 0 {
-		return true
-	}
-
-	component := components[0]
-	remains := components[1:]
-
-	componentId := q.w.GetCompId(reflect.TypeOf(component))
-	if _, ok := e.GetComponentContainer()[ComponentId(componentId)]; ok {
-		return q.doQueryRemains(e, remains...)
-	}
-
-	return false
 }
 
 // Has 判断实体是否包含指定组件
@@ -77,14 +83,7 @@ func (q *Query) Contains(e IEntity, components ...IComponent) bool {
 
 // Get 获取实体的指定组件
 func (q *Query) Get(e IEntity, c IComponent) (IComponent, bool) {
-	if !q.Has(e, c) {
-		return nil, false
-	}
-
 	componentId := q.w.GetCompId(reflect.TypeOf(c))
-	if component, ok := e.GetComponentContainer()[ComponentId(componentId)]; ok {
-		return component, true
-	}
-
-	return nil, false
+	component, ok := e.GetComponentContainer()[ComponentId(componentId)]
+	return component, ok
 }

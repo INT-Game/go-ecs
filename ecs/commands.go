@@ -29,11 +29,19 @@ func (c *Commands) doSpawn(entity IEntity, components ...IComponent) {
 	componentId := ComponentId(component.ID())
 
 	if _, ok := c.w.componentMap[componentId]; !ok {
+		c.doSpawn(entity, remains...)
 		return
 	}
 
 	// 根据组件和实体的映射关系
 	componentInfo := c.w.componentMap[componentId]
+	if target, exists := entity.GetComponentContainer()[componentId]; exists {
+		if target == component {
+			c.doSpawn(entity, remains...)
+			return
+		}
+		componentInfo.DestroyComponent(target)
+	}
 	componentInfo.AddEntity(entity)
 
 	// 建立实体和组件的映射关系
@@ -59,17 +67,24 @@ func (c *Commands) Execute() {
 
 func (c *Commands) SetResource(component IComponent) *Commands {
 	resourceId := c.w.GetResId(reflect.TypeOf(component))
-	if _, ok := c.w.resourceMap[ComponentId(resourceId)]; !ok {
-		c.w.resourceMap[ComponentId(resourceId)] = NewResourceInfo(func() {}, func() {})
+	resourceInfo, ok := c.w.resourceMap[ComponentId(resourceId)]
+	if !ok {
+		c.w.resourceMap[ComponentId(resourceId)] = &ResourceInfo{resource: component}
+		return c
 	}
-	c.w.resourceMap[ComponentId(resourceId)].resource = component
+	if resourceInfo.resource != nil && resourceInfo.resource != component {
+		resourceInfo.resource.Destroy()
+	}
+	resourceInfo.resource = component
 	return c
 }
 
 func (c *Commands) RemoveResource(component IComponent) *Commands {
 	resourceId := c.w.GetResId(reflect.TypeOf(component))
 	if resourceInfo, ok := c.w.resourceMap[ComponentId(resourceId)]; ok {
-		resourceInfo.destroyFunc()
+		if resourceInfo.resource != nil {
+			resourceInfo.resource.Destroy()
+		}
 		resourceInfo.resource = nil
 		delete(c.w.resourceMap, ComponentId(resourceId))
 	}

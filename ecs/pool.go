@@ -39,11 +39,10 @@ func (p *Pool[T]) Create() T {
 
 func (p *Pool[T]) doCreate() T {
 	t := reflect.TypeOf((*T)(nil)).Elem()
-	if t.Kind() == reflect.Ptr {
-		v := reflect.New(t.Elem())
-		return v.Interface().(T)
+	if t.Kind() != reflect.Ptr {
+		panic("ecs: component type must be a pointer")
 	}
-	return reflect.New(t).Interface().(T)
+	return reflect.New(t.Elem()).Interface().(T)
 }
 
 func (p *Pool[T]) Destroy(elem IComponent) {
@@ -52,9 +51,6 @@ func (p *Pool[T]) Destroy(elem IComponent) {
 		p.instances.Swap(i, p.instances.Len()-1)
 		p.instances.PopBack()
 
-		// 调用销毁函数进行资源清理
-		if elem.Destroy != nil {
-			elem.Destroy()
-		}
+		elem.Destroy()
 	}
 }

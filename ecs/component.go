@@ -5,16 +5,7 @@ import "github.com/INT-Game/go-ecs/sparse_set"
 type ComponentContainer map[ComponentId]IComponent
 
 type ResourceInfo struct {
-	resource    IComponent
-	createFunc  func()
-	destroyFunc func()
-}
-
-func NewResourceInfo(createFunc func(), destroyFunc func()) *ResourceInfo {
-	return &ResourceInfo{
-		createFunc:  createFunc,
-		destroyFunc: destroyFunc,
-	}
+	resource IComponent
 }
 
 type IComponentInfo interface {
@@ -26,7 +17,6 @@ type IComponentInfo interface {
 }
 
 type ComponentInfo[T IComponent] struct {
-	IComponentInfo
 	pool      *Pool[T]
 	sparseSet *sparse_set.SparseSet[uint64]
 }
@@ -65,13 +55,7 @@ type IComponent interface {
 	Destroy()
 }
 
-type IComparableComponent interface {
-	comparable
-	IComponent
-}
-
 type Component struct {
-	IComponent
 	id uint64
 }
 

@@ -1,6 +1,7 @@
 package sparse_set
 
 import (
+	"math"
 	"testing"
 )
 
@@ -54,4 +55,47 @@ func TestSparseSet_DuplicateAdd(t *testing.T) {
 	if count != 1 {
 		t.Errorf("Duplicate Add failed: expected 1, got %d", count)
 	}
+}
+
+func TestSparseSet_ZeroMeansEmptyAndIndexesStartAtOne(t *testing.T) {
+	s := NewSparseSet[uint32](4)
+	s.Add(0)
+	if !s.Contains(0) {
+		t.Fatal("zero must remain a valid set value")
+	}
+	if got := s.sparse[0][0]; got != 1 {
+		t.Fatalf("first density index encoding = %d, want 1", got)
+	}
+	s.Remove(0)
+	if got := s.sparse[0][0]; got != EMPTY {
+		t.Fatalf("removed sparse slot = %d, want EMPTY", got)
+	}
+}
+
+func TestSparseSet_Uint32IndexBeyondMaxInt32(t *testing.T) {
+	s := NewSparseSet[uint32](4)
+	s.ensurePage(1)
+	want := int64(math.MaxInt32) + 1
+	s.setSparseIndex(1, int(want))
+	if got := int64(s.getDensityIndex(1)); got != want {
+		t.Fatalf("density index = %d, want %d", got, want)
+	}
+}
+
+func TestSparseSet_LargeValueUsesMap(t *testing.T) {
+	s := NewSparseSet[uint64](4)
+	value := uint64(math.MaxInt32) + 1
+	s.Add(value)
+	if !s.Contains(value) || !s.Remove(value) || s.Contains(value) {
+		t.Fatal("large value map lifecycle failed")
+	}
+}
+
+func TestSparseSet_RejectsInvalidPageSize(t *testing.T) {
+	defer func() {
+		if recover() == nil {
+			t.Fatal("NewSparseSet must reject a non-positive page size")
+		}
+	}()
+	NewSparseSet[uint32](0)
 }
