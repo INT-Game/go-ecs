@@ -9,7 +9,6 @@ type ISystem interface {
 }
 
 type System struct {
-	ISystem
 	World     *World
 	Commands  *Commands
 	Query     *Query

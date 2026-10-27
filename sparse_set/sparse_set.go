@@ -2,23 +2,25 @@ package sparse_set
 
 import "math"
 
-const EMPTY = -1 // -1 indicates empty slot
+const EMPTY uint32 = 0
 
-// SparseSet 使用混合存储策略：
-// - 对于 <= MaxInt32 的值，使用 int32 数组存储（节省内存）
-// - 对于 > MaxInt32 的值，使用 map 存储（处理极端情况）
+// SparseSet stores density indexes as index+1 so the uint32 zero value means empty.
+// Large values use a map to avoid allocating an impractically large page table.
 type SparseSet[T uint32 | uint64] struct {
 	density   Density[T]
-	sparse    [][]int32    // 使用 int32 存储索引，节省内存
-	sparseMap map[uint64]T // 处理超过 int32 范围的值
+	sparse    [][]uint32
+	sparseMap map[uint64]uint32
 	pageSize  int
 }
 
 func NewSparseSet[T uint32 | uint64](pageSize int) *SparseSet[T] {
+	if pageSize <= 0 {
+		panic("sparse_set: page size must be positive")
+	}
 	return &SparseSet[T]{
 		density:   NewDensity[T](),
-		sparse:    make([][]int32, 0),
-		sparseMap: make(map[uint64]T),
+		sparse:    make([][]uint32, 0),
+		sparseMap: make(map[uint64]uint32),
 		pageSize:  pageSize,
 	}
 }
@@ -30,6 +32,9 @@ func (s *SparseSet[T]) Density() Density[T] {
 func (s *SparseSet[T]) Add(t T) {
 	if s.Contains(t) {
 		return
+	}
+	if uint64(len(s.density)) >= uint64(math.MaxUint32) {
+		panic("sparse_set: uint32 index capacity exceeded")
 	}
 
 	s.density.PushBack(t)
@@ -73,13 +78,13 @@ func (s *SparseSet[T]) Contains(t T) bool {
 
 	p := s.page(t)
 	o := s.offset(t)
-	return p < len(s.sparse) && o < len(s.sparse[p]) && s.sparse[p][o] > EMPTY
+	return p < len(s.sparse) && o < len(s.sparse[p]) && s.sparse[p][o] != EMPTY
 }
 
 func (s *SparseSet[T]) Clear() {
 	s.density = make([]T, 0)
-	s.sparse = make([][]int32, 0)
-	s.sparseMap = make(map[uint64]T)
+	s.sparse = make([][]uint32, 0)
+	s.sparseMap = make(map[uint64]uint32)
 }
 
 // shouldUseMap 判断是否应该使用 map 存储
@@ -97,17 +102,18 @@ func (s *SparseSet[T]) offset(t T) int {
 
 func (s *SparseSet[T]) getDensityIndex(t T) int {
 	if s.shouldUseMap(t) {
-		return int(s.sparseMap[uint64(t)])
+		return int(s.sparseMap[uint64(t)] - 1)
 	}
-	return int(s.sparse[s.page(t)][s.offset(t)])
+	return int(s.sparse[s.page(t)][s.offset(t)] - 1)
 }
 
 func (s *SparseSet[T]) setSparseIndex(t T, index int) {
+	encoded := uint32(index) + 1
 	if s.shouldUseMap(t) {
-		s.sparseMap[uint64(t)] = T(index)
+		s.sparseMap[uint64(t)] = encoded
 		return
 	}
-	s.sparse[s.page(t)][s.offset(t)] = int32(index)
+	s.sparse[s.page(t)][s.offset(t)] = encoded
 }
 
 func (s *SparseSet[T]) deleteDensityIndex(t T) {
@@ -115,7 +121,7 @@ func (s *SparseSet[T]) deleteDensityIndex(t T) {
 		delete(s.sparseMap, uint64(t))
 		return
 	}
-	s.setSparseIndex(t, EMPTY)
+	s.sparse[s.page(t)][s.offset(t)] = EMPTY
 }
 
 func (s *SparseSet[T]) ensurePage(t T) {
@@ -126,11 +132,7 @@ func (s *SparseSet[T]) ensurePage(t T) {
 	p := s.page(t)
 	if p >= len(s.sparse) {
 		for i := len(s.sparse); i <= p; i++ {
-			newPage := make([]int32, s.pageSize)
-			for j := range newPage {
-				newPage[j] = EMPTY
-			}
-			s.sparse = append(s.sparse, newPage)
+			s.sparse = append(s.sparse, make([]uint32, s.pageSize))
 		}
 	}
 }

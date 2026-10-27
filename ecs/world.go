@@ -19,8 +19,6 @@ type IWorld interface {
 }
 
 type World struct {
-	IWorld
-
 	entId        uint64
 	resIdGetter  *IdentityGetter
 	compIdGetter *IdentityGetter
@@ -33,6 +31,12 @@ type World struct {
 	destroyEntities []IEntity
 	startUpSystems  []ISystem
 	updateSystems   []ISystem
+	events          []eventQueue
+}
+
+type eventQueue interface {
+	Advance()
+	Clear()
 }
 
 func NewWorld() *World {
@@ -91,12 +95,23 @@ func (w *World) AddUpdateSystem(updateSystem ISystem) *World {
 }
 
 func (w *World) destroy(entity IEntity) {
-	for componentId, component := range entity.GetComponentContainer() {
-		componentInfo := w.componentMap[componentId]
-		componentInfo.DestroyComponent(component)
-		componentInfo.RemoveEntity(entity)
+	if entity == nil || entity.GetEcsWorld() != w {
+		return
 	}
-	delete(w.entities, EntityId(entity.ID()))
+	stored, ok := w.entities[EntityId(entity.ID())]
+	if !ok {
+		return
+	}
+	container := stored.GetComponentContainer()
+	for componentId, component := range container {
+		componentInfo := w.componentMap[componentId]
+		if componentInfo != nil {
+			componentInfo.DestroyComponent(component)
+			componentInfo.RemoveEntity(stored)
+		}
+		delete(container, componentId)
+	}
+	delete(w.entities, EntityId(stored.ID()))
 }
 
 func (w *World) Startup() {
@@ -106,15 +121,32 @@ func (w *World) Startup() {
 }
 
 func (w *World) Update() {
+	for _, events := range w.events {
+		events.Advance()
+	}
 	for _, system := range w.updateSystems {
 		system.Update()
 	}
 }
 
 func (w *World) Shutdown() {
+	for _, entity := range w.entities {
+		w.destroy(entity)
+	}
+	for _, resource := range w.resourceMap {
+		if resource.resource != nil {
+			resource.resource.Destroy()
+			resource.resource = nil
+		}
+	}
+	for _, events := range w.events {
+		events.Clear()
+	}
 	w.resourceMap = make(map[ComponentId]*ResourceInfo)
 	w.componentMap = make(map[ComponentId]IComponentInfo)
 	w.entities = make(map[EntityId]IEntity)
+	w.destroyEntities = nil
 	w.startUpSystems = make([]ISystem, 0)
 	w.updateSystems = make([]ISystem, 0)
+	w.events = nil
 }

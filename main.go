@@ -6,67 +6,104 @@ import (
 	"github.com/INT-Game/go-ecs/ecs"
 )
 
-type NameComponent struct {
+type Position struct {
 	ecs.Component
-	Name string
+	X, Y float64
 }
 
-type IDComponent struct {
+func (p *Position) Init() {
+	*p = Position{Component: p.Component}
+}
+
+type Velocity struct {
 	ecs.Component
-	Id string
+	X, Y float64
 }
 
-type NameSystem struct {
-	ecs.System
+func (v *Velocity) Init() {
+	*v = Velocity{Component: v.Component}
 }
 
-func NewNameSystem(w *ecs.World) *NameSystem {
-	return &NameSystem{
-		System: *ecs.NewSystem(w, &NameComponent{}),
+type GameTime struct {
+	ecs.Component
+	DeltaSeconds float64
+}
+
+type MovedEvent struct {
+	EntityID uint64
+	X, Y     float64
+}
+
+type MovementSystem struct {
+	*ecs.System
+	resources *ecs.Resources
+	moved     *ecs.EventWriter[MovedEvent]
+}
+
+func NewMovementSystem(w *ecs.World, resources *ecs.Resources, moved *ecs.EventWriter[MovedEvent]) *MovementSystem {
+	return &MovementSystem{
+		System:    ecs.NewSystem(w, &Position{}, &Velocity{}),
+		resources: resources,
+		moved:     moved,
 	}
 }
 
-func (s *NameSystem) UpdateEntity(entity ecs.IEntity) {
-	comp, ok := s.Query.Get(entity, &NameComponent{})
-	if ok {
-		fmt.Println(comp.(*NameComponent).Name)
+func (s *MovementSystem) Update() {
+	gameTime, ok := ecs.GetResource[*GameTime](s.resources)
+	if !ok {
+		return
 	}
+	s.RangeEntities(func(entity ecs.IEntity) {
+		position := ecs.GetComponent[*Position](entity)
+		velocity := ecs.GetComponent[*Velocity](entity)
+		position.X += velocity.X * gameTime.DeltaSeconds
+		position.Y += velocity.Y * gameTime.DeltaSeconds
+		s.moved.Send(MovedEvent{EntityID: entity.ID(), X: position.X, Y: position.Y})
+	})
 }
 
-type IdSystem struct {
-	ecs.System
+type ReportSystem struct {
+	*ecs.System
+	moved *ecs.EventReader[MovedEvent]
 }
 
-func NewIdSystem(w *ecs.World) *IdSystem {
-	return &IdSystem{
-		System: *ecs.NewSystem(w, &IDComponent{}),
-	}
+func NewReportSystem(w *ecs.World, moved *ecs.EventReader[MovedEvent]) *ReportSystem {
+	return &ReportSystem{System: ecs.NewSystem(w), moved: moved}
 }
 
-func (s *IdSystem) UpdateEntity(entity ecs.IEntity) {
-	comp, ok := s.Query.Get(entity, &IDComponent{})
-	if ok {
-		fmt.Println(comp.(*IDComponent).Id)
+func (s *ReportSystem) Update() {
+	for _, event := range s.moved.Get() {
+		fmt.Printf("entity=%d position=(%.1f, %.1f)\n", event.EntityID, event.X, event.Y)
 	}
 }
 
 func main() {
 	w := ecs.NewWorld()
+	defer w.Shutdown()
 
-	w.AddUpdateSystem(NewNameSystem(w))
-	w.AddUpdateSystem(NewIdSystem(w))
+	resources := ecs.NewResources(w)
+	w.GetCommands().SetResource(&GameTime{DeltaSeconds: 1})
 
-	nameComponent := ecs.SpawnComponent[*NameComponent](w)
-	nameComponent.Name = "TestNameComponent"
+	movedEvents := ecs.RegisterEvents[MovedEvent](w)
+	w.AddUpdateSystem(NewMovementSystem(w, resources, movedEvents.Writer()))
+	w.AddUpdateSystem(NewReportSystem(w, movedEvents.Reader()))
+	w.Startup()
 
-	idComponent := ecs.SpawnComponent[*IDComponent](w)
-	idComponent.Id = "TestIDComponent"
+	position := ecs.SpawnComponent[*Position](w)
+	position.X, position.Y = 0, 0
+	velocity := ecs.SpawnComponent[*Velocity](w)
+	velocity.X, velocity.Y = 1, 0.5
+	entity := ecs.SpawnEmptyEntity(w, position, velocity)
 
-	entityA := ecs.SpawnEmptyEntity(w, nameComponent)
-	w.Update()
+	for tick := 1; tick <= 3; tick++ {
+		fmt.Printf("tick %d\n", tick)
+		w.Update()
+		w.GetCommands().Execute()
+	}
 
-	fmt.Println("================================")
+	entity.RemoveComponents(&Velocity{})
+	fmt.Printf("moving entities after removing Velocity: %d\n", len(w.GetQuery().Query(&Position{}, &Velocity{})))
 
-	w.GetCommands().DestroyEntity(entityA)
-	w.Update()
+	w.GetCommands().DestroyEntity(entity).Execute()
+	fmt.Printf("entities after destroy: %d\n", len(w.GetEntities()))
 }

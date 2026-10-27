@@ -9,30 +9,30 @@ func SpawnEmptyEntity(w IWorld, components ...IComponent) IEntity {
 }
 
 func SpawnEntity[T IEntity](w IWorld, components ...IComponent) T {
-	var e T
 	t := reflect.TypeOf((*T)(nil)).Elem()
-	if t.Kind() == reflect.Ptr {
-		v := reflect.New(t.Elem())
-		e = v.Interface().(T)
-	} else {
-		e = reflect.New(t).Interface().(T)
+	if t.Kind() != reflect.Ptr {
+		panic("ecs: entity type must be a pointer")
 	}
+	e := reflect.New(t.Elem()).Interface().(T)
 
 	setValue := reflect.ValueOf(e)
-	if setValue.Kind() == reflect.Ptr {
-		setValue = setValue.Elem()
-	}
+	setValue = setValue.Elem()
+	baseEntityType := reflect.TypeOf((*Entity)(nil))
 
+	found := false
 	for i := 0; i < setValue.NumField(); i++ {
 		field := setValue.Field(i)
 		fieldType := setValue.Type().Field(i)
 
-		// Entity
-		if fieldType.Name == "Entity" && fieldType.Type.String() == "*ecs.Entity" {
+		if fieldType.Anonymous && fieldType.Type == baseEntityType {
 			entity := NewEntity(w)
 			field.Set(reflect.ValueOf(entity))
+			found = true
 			break
 		}
+	}
+	if !found {
+		panic("ecs: custom entity must embed *ecs.Entity")
 	}
 
 	w.GetCommands().doSpawn(e, components...)
